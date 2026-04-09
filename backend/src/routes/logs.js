@@ -1,14 +1,21 @@
-// src/routes/logs.js — Behavior log routes
+// src/routes/logs.js
 const router = require('express').Router();
 const pool   = require('../db/pool');
 const { requireAuth, requireRole, auditLog } = require('../middleware/auth');
 
 router.use(requireAuth);
 
+// FIX: convert ISO date string to MySQL datetime format
+function toMySQL(isoString) {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 // ── GET /api/logs?student_id=&limit=&offset= ──────────────────────────────────
 router.get('/', auditLog('VIEW'), async (req, res) => {
   const { student_id, limit = 50, offset = 0 } = req.query;
-
   if (!student_id)
     return res.status(400).json({ error: 'student_id query param required' });
 
@@ -27,8 +34,7 @@ router.get('/', auditLog('VIEW'), async (req, res) => {
       if (!assigned[0]) return res.status(403).json({ error: 'Access denied' });
     }
 
-    // FIX: cast limit/offset to integers properly for mysql2
-    const limitNum  = Math.max(1, Math.min(500, parseInt(limit)  || 50));
+    const limitNum  = Math.max(1, Math.min(500, parseInt(limit) || 50));
     const offsetNum = Math.max(0, parseInt(offset) || 0);
 
     const [rows] = await pool.execute(
@@ -40,7 +46,6 @@ router.get('/', auditLog('VIEW'), async (req, res) => {
        LIMIT ${limitNum} OFFSET ${offsetNum}`,
       [student_id]
     );
-
     return res.json(rows);
   } catch (err) {
     console.error(err);
@@ -76,10 +81,6 @@ router.post('/', async (req, res) => {
 
   if (!student_id || !behavior_type)
     return res.status(400).json({ error: 'student_id and behavior_type are required' });
-  if (typeof behavior_type !== 'string')
-    return res.status(400).json({ error: 'behavior_type must be a string' });
-  if (intensity !== undefined && (typeof intensity !== 'number' || intensity < 1 || intensity > 5))
-    return res.status(400).json({ error: 'intensity must be a number between 1 and 5' });
 
   try {
     const [students] = await pool.execute(
@@ -97,8 +98,8 @@ router.post('/', async (req, res) => {
       [
         student_id, req.user.id, behavior_type,
         intensity || null,
-        start_time || new Date(),
-        end_time || null,
+        toMySQL(start_time) || toMySQL(new Date().toISOString()),
+        toMySQL(end_time),
         antecedent || null, consequence || null,
         location || null, activity || null,
         intervention_used || null,
@@ -108,10 +109,7 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    checkAlertRules(student_id, behavior_type, req.user.organizationId).catch(err =>
-      console.error('Alert rule check failed:', err.message)
-    );
-
+    checkAlertRules(student_id, behavior_type, req.user.organizationId).catch(console.error);
     return res.status(201).json({ id: result.insertId, message: 'Log created' });
   } catch (err) {
     console.error(err);
@@ -124,7 +122,6 @@ router.patch('/:id', auditLog('UPDATE'), async (req, res) => {
   const allowed = ['behavior_type', 'intensity', 'end_time', 'antecedent', 'consequence',
                    'location', 'activity', 'intervention_used', 'intervention_successful', 'notes'];
   const fields = [], values = [];
-
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(req.body, key)) {
       fields.push(`${key} = ?`);
@@ -142,15 +139,12 @@ router.patch('/:id', auditLog('UPDATE'), async (req, res) => {
       [req.params.id, req.user.organizationId]
     );
     if (!logs[0]) return res.status(404).json({ error: 'Log not found' });
-
     const canEdit = ['admin', 'bcba'].includes(req.user.role) || logs[0].recorded_by === req.user.id;
     if (!canEdit) return res.status(403).json({ error: 'Cannot edit this log' });
-
     values.push(req.params.id);
     await pool.execute(`UPDATE behavior_logs SET ${fields.join(', ')} WHERE id = ?`, values);
     return res.json({ message: 'Log updated' });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ error: 'Server error' });
   }
 });
@@ -171,24 +165,21 @@ router.delete('/:id', requireRole(['admin', 'bcba']), auditLog('DELETE'), async 
   }
 });
 
-// ── Internal: check alert rules ───────────────────────────────────────────────
-async function checkAlertRules(studentId, behaviorType, organizationId) {
+async function checkAlertRules(studentId, behaviorType) {
   const [rules] = await pool.execute(
-    'SELECT * FROM alert_rules WHERE student_id = ? AND active = TRUE',
-    [studentId]
+    'SELECT * FROM alert_rules WHERE student_id = ? AND active = TRUE', [studentId]
   );
   for (const rule of rules) {
     const condition = rule.rule_condition;
     if (condition.behavior !== behaviorType) continue;
     const windowMs = (condition.window_minutes || 60) * 60 * 1000;
-    const since    = new Date(Date.now() - windowMs);
+    const since = toMySQL(new Date(Date.now() - windowMs).toISOString());
     const [counts] = await pool.execute(
       'SELECT COUNT(*) AS cnt FROM behavior_logs WHERE student_id = ? AND behavior_type = ? AND start_time >= ?',
       [studentId, behaviorType, since]
     );
     if (counts[0].cnt >= condition.threshold) {
       await pool.execute('UPDATE alert_rules SET last_triggered = NOW() WHERE id = ?', [rule.id]);
-      console.log(`🔔 Alert triggered for student ${studentId}: ${JSON.stringify(rule.rule_action)}`);
     }
   }
 }
