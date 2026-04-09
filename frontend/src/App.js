@@ -517,7 +517,9 @@ const StudentScreen = ({ navigate, token, student }) => {
 };
 
 // ─── SCREEN: Log Behavior ─────────────────────────────────────────────────────
-const LogScreen = ({ navigate, token, student }) => {
+const LogScreen = ({ navigate, token, student: initialStudent }) => {
+  const [student,     setStudent]     = useState(initialStudent);
+  const [students,    setStudents]    = useState([]);
   const [selBeh,      setSelBeh]      = useState('');
   const [selInt,      setSelInt]      = useState(null);
   const [antecedent,  setAntecedent]  = useState('');
@@ -529,6 +531,12 @@ const LogScreen = ({ navigate, token, student }) => {
   const [running,     setRunning]     = useState(false);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
+
+  useEffect(() => {
+    if (!initialStudent) {
+      apiFetch('/api/students', {}, token).then(setStudents).catch(() => {});
+    }
+  }, [initialStudent, token]);
   const startTimeRef  = useRef(new Date());
   const intervalRef   = useRef(null);
 
@@ -588,6 +596,24 @@ const LogScreen = ({ navigate, token, student }) => {
       />
       <div className="scroll">
         <ErrorBanner message={error} />
+
+        {/* Student picker shown when no student pre-selected */}
+        {!student && (
+          <>
+            <SectionLabel mt={0}>Select student</SectionLabel>
+            {students.length === 0 ? (
+              <div style={{ fontSize: 13, color: '#888', padding: '12px 0' }}>No students assigned yet.</div>
+            ) : students.map(s => (
+              <div key={s.id} onClick={() => setStudent(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: '0.5px solid #f0f0f0', cursor: 'pointer' }}>
+                <Avatar initials={getInitials(`${s.first_name} ${s.last_name}`)} color={avatarColor(s.id)} size={36} />
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>{s.first_name} {s.last_name}</div>
+              </div>
+            ))}
+            <div style={{ height: 20 }} />
+          </>
+        )}
+
+        {student && (<>
         <SectionLabel mt={0}>Behavior type</SectionLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 14 }}>
           {behaviors.map(b => (
@@ -660,6 +686,7 @@ const LogScreen = ({ navigate, token, student }) => {
         <SectionLabel mt={0}>Notes</SectionLabel>
         <textarea placeholder="Type notes here…" value={notes} onChange={e => setNotes(e.target.value)} style={{ marginBottom: 14 }} />
         <BtnPrimary onClick={handleSave} disabled={loading}>{loading ? 'Saving…' : 'Save behavior log'}</BtnPrimary>
+        </>)}
       </div>
     </>
   );
@@ -1167,7 +1194,6 @@ const AdminScreen = ({ navigate, token, user }) => {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
 
-  // FIX: was inverted — non-admins were seeing the panel, admins were blocked
   if (!['admin','bcba'].includes(user?.role)) return (
     <>
       <Topbar left={<div><BtnBack onClick={() => navigate('home')} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2 }}>Admin panel</div></div>} />
@@ -1183,6 +1209,16 @@ const AdminScreen = ({ navigate, token, user }) => {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
+
+  const deleteStudent = async (id, name) => {
+    if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
+    try {
+      await apiFetch(`/api/students/${id}`, { method: 'DELETE' }, token);
+      setStudents(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <>
@@ -1202,13 +1238,13 @@ const AdminScreen = ({ navigate, token, user }) => {
             <SectionLabel mt={0}>All students ({students.length})</SectionLabel>
             {students.length === 0 && <div style={{ fontSize:13, color:'#888', padding:'12px 0' }}>No students yet.</div>}
             {students.map(s => (
-              <div key={s.id} onClick={() => navigate('student', s)} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 0', borderBottom:'0.5px solid #f0f0f0', cursor:'pointer' }}>
+              <div key={s.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 0', borderBottom:'0.5px solid #f0f0f0' }}>
                 <Avatar initials={getInitials(`${s.first_name} ${s.last_name}`)} color={avatarColor(s.id)} size={38} />
-                <div style={{ flex:1 }}>
+                <div style={{ flex:1, cursor:'pointer' }} onClick={() => navigate('student', s)}>
                   <div style={{ fontSize:14, fontWeight:500, color:'#1a1a1a' }}>{s.first_name} {s.last_name}</div>
                   <div style={{ fontSize:11, color:'#888', marginTop:2 }}>{s.logs_today || 0} logs today</div>
                 </div>
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="#ccc" strokeWidth="2" strokeLinecap="round"/></svg>
+                <button onClick={() => deleteStudent(s.id, `${s.first_name} ${s.last_name}`)} style={{ background:'#FCEBEB', border:'none', borderRadius:6, padding:'5px 10px', fontSize:11, color:'#A32D2D', cursor:'pointer', fontFamily:'inherit' }}>Delete</button>
               </div>
             ))}
           </>
