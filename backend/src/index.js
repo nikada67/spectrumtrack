@@ -9,6 +9,9 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
+// FIX: trust Railway's proxy
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────
 app.use(helmet());
 
