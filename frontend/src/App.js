@@ -118,6 +118,98 @@ const BottomNav = ({ current, navigate }) => {
   );
 };
 
+// ─── CONFIRM SIGN OUT MODAL ───────────────────────────────────────────────────
+const SignOutModal = ({ onConfirm, onCancel }) => (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+    <div style={{ background: 'white', borderRadius: 14, padding: '24px 22px', width: 280, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+      <div style={{ fontSize: 16, fontWeight: 500, color: '#1a1a1a', marginBottom: 8 }}>Sign out?</div>
+      <div style={{ fontSize: 13, color: '#888', marginBottom: 22, lineHeight: 1.5 }}>You'll need to sign in again to access SpectrumTrack.</div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <BtnSecondary onClick={onCancel} style={{ flex: 1 }}>Cancel</BtnSecondary>
+        <button onClick={onConfirm} style={{ flex: 1, background: '#E24B4A', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', padding: '9px 0' }}>Sign out</button>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── PROFILE DROPDOWN ─────────────────────────────────────────────────────────
+const ProfileDropdown = ({ user, navigate, darkMode, onToggleDark, onSignOutRequest }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const isAdmin = ['admin', 'bcba'].includes(user?.role);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+        aria-label="Profile menu"
+      >
+        <Avatar initials={getInitials(user?.name || '?')} color="green" size={30} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', right: 0, top: 38, width: 210, background: 'white',
+          border: '0.5px solid #e0e0e0', borderRadius: 12, boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+          zIndex: 500, overflow: 'hidden',
+        }}>
+          {/* User info header */}
+          <div style={{ padding: '12px 14px', borderBottom: '0.5px solid #f0f0f0' }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{user?.name || 'User'}</div>
+            <div style={{ fontSize: 11, color: '#888', marginTop: 2, textTransform: 'capitalize' }}>{user?.role}</div>
+          </div>
+
+          {/* Dark mode toggle */}
+          <button
+            onClick={() => { onToggleDark(); setOpen(false); }}
+            style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '11px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, color: '#1a1a1a' }}
+          >
+            <span>{darkMode ? '☀️  Light mode' : '🌙  Dark mode'}</span>
+            <span style={{ fontSize: 11, color: '#aaa' }}>{darkMode ? 'On' : 'Off'}</span>
+          </button>
+
+          {/* Admin panel — only for admin/bcba */}
+          {isAdmin && (
+            <button
+              onClick={() => { navigate('admin'); setOpen(false); }}
+              style={{ width: '100%', background: 'none', border: 'none', borderTop: '0.5px solid #f0f0f0', cursor: 'pointer', fontFamily: 'inherit', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#1a1a1a', textAlign: 'left' }}
+            >
+              🛠️  Admin panel
+            </button>
+          )}
+
+          {/* Add student — only for admin/bcba/teacher */}
+          {['admin', 'bcba', 'teacher'].includes(user?.role) && (
+            <button
+              onClick={() => { navigate('addstudent'); setOpen(false); }}
+              style={{ width: '100%', background: 'none', border: 'none', borderTop: '0.5px solid #f0f0f0', cursor: 'pointer', fontFamily: 'inherit', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#1a1a1a', textAlign: 'left' }}
+            >
+              👤  Add student
+            </button>
+          )}
+
+          {/* Sign out */}
+          <button
+            onClick={() => { onSignOutRequest(); setOpen(false); }}
+            style={{ width: '100%', background: 'none', border: 'none', borderTop: '0.5px solid #f0f0f0', cursor: 'pointer', fontFamily: 'inherit', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#E24B4A', textAlign: 'left' }}
+          >
+            🚪  Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 }
@@ -200,7 +292,6 @@ const LoginScreen = ({ onLogin }) => {
       {/* Header */}
       <div style={{ padding: '36px 32px 24px', textAlign: 'center', borderBottom: '0.5px solid #f0f0f0' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          {/* Logo mark */}
           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="white" opacity="0.3"/>
@@ -361,7 +452,7 @@ const LoginScreen = ({ onLogin }) => {
 };
 
 // ─── SCREEN: Home ─────────────────────────────────────────────────────────────
-const HomeScreen = ({ navigate, token, user }) => {
+const HomeScreen = ({ navigate, token, user, onSignOutRequest, darkMode, onToggleDark }) => {
   const [students, setStudents] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
@@ -396,7 +487,13 @@ const HomeScreen = ({ navigate, token, user }) => {
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style={{ cursor: 'pointer' }} onClick={() => navigate('alerts')}>
               <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke="#888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <Avatar initials={getInitials(user?.name || '?')} color="green" size={30} />
+            <ProfileDropdown
+              user={user}
+              navigate={navigate}
+              darkMode={darkMode}
+              onToggleDark={onToggleDark}
+              onSignOutRequest={onSignOutRequest}
+            />
           </div>
         }
       />
@@ -421,7 +518,8 @@ const HomeScreen = ({ navigate, token, user }) => {
               </div>
             ))}
             <div style={{ marginTop: 14 }}>
-              <BtnPrimary onClick={() => navigate('log', null)}>+ Log a behavior</BtnPrimary>
+              {/* FIX: navigate('log') without payload so student picker shows fresh */}
+              <BtnPrimary onClick={() => navigate('log')}>+ Log a behavior</BtnPrimary>
             </div>
           </>
         )}
@@ -517,9 +615,16 @@ const StudentScreen = ({ navigate, token, student }) => {
 };
 
 // ─── SCREEN: Log Behavior ─────────────────────────────────────────────────────
-const LogScreen = ({ navigate, token, student: initialStudent }) => {
-  const [student,     setStudent]     = useState(initialStudent);
-  const [students,    setStudents]    = useState([]);
+// FIX: student selection bug — component now uses a local selectedStudent state
+// that starts as null when no student is pre-selected, and ALWAYS shows the picker
+// when navigated to from the bottom nav (initialStudent = null).
+// Going back from the form clears selectedStudent so the picker shows again.
+const LogScreen = ({ navigate, token, initialStudent }) => {
+  // FIX: separate out "student chosen inside this screen" from the pre-selected one
+  const [selectedStudent, setSelectedStudent] = useState(initialStudent || null);
+  const [students,        setStudents]        = useState([]);
+
+  // Form state
   const [selBeh,      setSelBeh]      = useState('');
   const [selInt,      setSelInt]      = useState(null);
   const [antecedent,  setAntecedent]  = useState('');
@@ -532,26 +637,56 @@ const LogScreen = ({ navigate, token, student: initialStudent }) => {
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
 
+  // FIX: reset form + student selection whenever initialStudent changes
+  // (e.g. navigating to 'log' from bottom nav clears everything)
+  useEffect(() => {
+    setSelectedStudent(initialStudent || null);
+    setSelBeh('');
+    setSelInt(null);
+    setAntecedent('');
+    setConsequence('');
+    setLocation('classroom');
+    setActivity('');
+    setNotes('');
+    setTimerSecs(0);
+    setRunning(false);
+  }, [initialStudent]);
+
+  // Load student list when no student is pre-selected
   useEffect(() => {
     if (!initialStudent) {
       apiFetch('/api/students', {}, token).then(setStudents).catch(() => {});
     }
   }, [initialStudent, token]);
-  const startTimeRef  = useRef(new Date());
-  const intervalRef   = useRef(null);
 
-  const handleTimerToggle = () => {
-    if (!running) startTimeRef.current = new Date();
-    setRunning(r => !r);
-  };
+  // FIX: startTimeRef set once when student is confirmed, not on every render
+  const startTimeRef = useRef(new Date());
+  const intervalRef  = useRef(null);
 
+  // FIX: proper timer — clear on unmount always, restart cleanly on running change
   useEffect(() => {
-    if (running) { intervalRef.current = setInterval(() => setTimerSecs(s => s + 1), 1000); }
-    else { clearInterval(intervalRef.current); }
+    if (running) {
+      intervalRef.current = setInterval(() => setTimerSecs(s => s + 1), 1000);
+    } else {
+      clearInterval(intervalRef.current);
+    }
     return () => clearInterval(intervalRef.current);
   }, [running]);
 
-  const resetTimer = () => { setRunning(false); setTimerSecs(0); };
+  const handleTimerToggle = () => {
+    if (!running && timerSecs === 0) {
+      // Starting fresh — record the actual start time
+      startTimeRef.current = new Date();
+    }
+    setRunning(r => !r);
+  };
+
+  const resetTimer = () => {
+    setRunning(false);
+    setTimerSecs(0);
+    startTimeRef.current = new Date();
+  };
+
   const mins = Math.floor(timerSecs / 60);
   const secs  = timerSecs % 60;
 
@@ -570,41 +705,58 @@ const LogScreen = ({ navigate, token, student: initialStudent }) => {
 
   const handleSave = async () => {
     if (!selBeh) { setError('Please select a behavior type'); return; }
-    if (!student?.id) { setError('No student selected'); return; }
+    if (!selectedStudent?.id) { setError('No student selected'); return; }
     setLoading(true); setError('');
     try {
-      const endTime = running ? new Date() : (timerSecs > 0 ? new Date(startTimeRef.current.getTime() + timerSecs * 1000) : null);
+      const endTime = running
+        ? new Date()
+        : (timerSecs > 0 ? new Date(startTimeRef.current.getTime() + timerSecs * 1000) : null);
       await apiFetch('/api/logs', {
         method: 'POST',
         body: JSON.stringify({
-          student_id: student.id, behavior_type: selBeh, intensity: selInt,
+          student_id: selectedStudent.id, behavior_type: selBeh, intensity: selInt,
           start_time: startTimeRef.current.toISOString(), end_time: endTime?.toISOString() || null,
           antecedent: antecedent || null, consequence: consequence || null,
           location: location || null, activity: activity || null, notes: notes || null,
         }),
       }, token);
-      navigate('saved', student);
+      navigate('saved', selectedStudent);
     } catch (err) { setError(err.message || 'Failed to save log'); }
     finally { setLoading(false); }
+  };
+
+  // FIX: back button from form goes back to student picker (not home) when no initialStudent
+  const handleBack = () => {
+    if (initialStudent) {
+      navigate('student', initialStudent);
+    } else if (selectedStudent) {
+      // Was in form, go back to picker
+      setSelectedStudent(null);
+      setSelBeh(''); setSelInt(null); setAntecedent(''); setConsequence('');
+      setLocation('classroom'); setActivity(''); setNotes('');
+      setTimerSecs(0); setRunning(false);
+    } else {
+      navigate('home');
+    }
   };
 
   return (
     <>
       <Topbar
-        left={<div><BtnBack onClick={() => navigate(student ? 'student' : 'home', student)} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2 }}>Log behavior</div></div>}
-        right={student && <span style={{ fontSize: 11, color: '#1D9E75' }}>{student.first_name} {student.last_name}</span>}
+        left={<div><BtnBack onClick={handleBack} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2 }}>Log behavior</div></div>}
+        right={selectedStudent && <span style={{ fontSize: 11, color: '#1D9E75' }}>{selectedStudent.first_name} {selectedStudent.last_name}</span>}
       />
       <div className="scroll">
         <ErrorBanner message={error} />
 
-        {/* Student picker shown when no student pre-selected */}
-        {!student && (
+        {/* Student picker — shown when no student selected */}
+        {!selectedStudent && (
           <>
             <SectionLabel mt={0}>Select student</SectionLabel>
             {students.length === 0 ? (
               <div style={{ fontSize: 13, color: '#888', padding: '12px 0' }}>No students assigned yet.</div>
             ) : students.map(s => (
-              <div key={s.id} onClick={() => setStudent(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: '0.5px solid #f0f0f0', cursor: 'pointer' }}>
+              <div key={s.id} onClick={() => { setSelectedStudent(s); startTimeRef.current = new Date(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: '0.5px solid #f0f0f0', cursor: 'pointer' }}>
                 <Avatar initials={getInitials(`${s.first_name} ${s.last_name}`)} color={avatarColor(s.id)} size={36} />
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>{s.first_name} {s.last_name}</div>
               </div>
@@ -613,80 +765,86 @@ const LogScreen = ({ navigate, token, student: initialStudent }) => {
           </>
         )}
 
-        {student && (<>
-        <SectionLabel mt={0}>Behavior type</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 14 }}>
-          {behaviors.map(b => (
-            <button key={b.id} onClick={() => setSelBeh(b.id)} style={{ padding: '11px 6px', borderRadius: 8, border: `1.5px solid ${selBeh === b.id ? '#1D9E75' : '#e0e0e0'}`, background: selBeh === b.id ? '#E1F5EE' : 'white', cursor: 'pointer', textAlign: 'center', fontSize: 12, fontWeight: 500, color: selBeh === b.id ? '#0F6E56' : '#1a1a1a', fontFamily: 'inherit' }}>
-              <span style={{ fontSize: 16, display: 'block', marginBottom: 3 }}>{b.icon}</span>
-              {b.label}
-            </button>
-          ))}
-        </div>
+        {selectedStudent && (
+          <>
+            <SectionLabel mt={0}>Behavior type</SectionLabel>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginBottom: 14 }}>
+              {behaviors.map(b => (
+                <button key={b.id} onClick={() => setSelBeh(b.id)} style={{ padding: '11px 6px', borderRadius: 8, border: `1.5px solid ${selBeh === b.id ? '#1D9E75' : '#e0e0e0'}`, background: selBeh === b.id ? '#E1F5EE' : 'white', cursor: 'pointer', textAlign: 'center', fontSize: 12, fontWeight: 500, color: selBeh === b.id ? '#0F6E56' : '#1a1a1a', fontFamily: 'inherit' }}>
+                  <span style={{ fontSize: 16, display: 'block', marginBottom: 3 }}>{b.icon}</span>
+                  {b.label}
+                </button>
+              ))}
+            </div>
 
-        <SectionLabel mt={0}>Duration timer</SectionLabel>
-        <div style={{ background: '#f9f9f9', borderRadius: 8, padding: 12, textAlign: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 28, fontWeight: 500, letterSpacing: 2, marginBottom: 8 }}>{mins}:{secs < 10 ? '0' : ''}{secs}</div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-            <BtnSecondary onClick={handleTimerToggle} style={{ padding: '7px 18px', fontSize: 12 }}>{running ? 'Stop' : timerSecs > 0 ? 'Resume' : 'Start'}</BtnSecondary>
-            <BtnSecondary onClick={resetTimer} style={{ padding: '7px 14px', fontSize: 12 }}>Reset</BtnSecondary>
-          </div>
-        </div>
+            <SectionLabel mt={0}>Duration timer</SectionLabel>
+            <div style={{ background: '#f9f9f9', borderRadius: 8, padding: 12, textAlign: 'center', marginBottom: 14 }}>
+              <div style={{ fontSize: 28, fontWeight: 500, letterSpacing: 2, marginBottom: 8 }}>
+                {mins}:{secs < 10 ? '0' : ''}{secs}
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                <BtnSecondary onClick={handleTimerToggle} style={{ padding: '7px 18px', fontSize: 12 }}>
+                  {running ? 'Stop' : timerSecs > 0 ? 'Resume' : 'Start'}
+                </BtnSecondary>
+                <BtnSecondary onClick={resetTimer} style={{ padding: '7px 14px', fontSize: 12 }}>Reset</BtnSecondary>
+              </div>
+            </div>
 
-        <SectionLabel mt={0}>Intensity (1–5)</SectionLabel>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {[1,2,3,4,5].map(n => (
-            <button key={n} onClick={() => setSelInt(n)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: `1.5px solid ${selInt === n ? intBorders[n] : '#e0e0e0'}`, background: selInt === n ? intBgs[n] : 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: selInt === n ? intColors[n] : '#888', fontFamily: 'inherit' }}>{n}</button>
-          ))}
-        </div>
+            <SectionLabel mt={0}>Intensity (1–5)</SectionLabel>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+              {[1,2,3,4,5].map(n => (
+                <button key={n} onClick={() => setSelInt(n)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: `1.5px solid ${selInt === n ? intBorders[n] : '#e0e0e0'}`, background: selInt === n ? intBgs[n] : 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: selInt === n ? intColors[n] : '#888', fontFamily: 'inherit' }}>{n}</button>
+              ))}
+            </div>
 
-        <SectionLabel mt={0}>Antecedent &amp; location</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
-          <select value={antecedent} onChange={e => setAntecedent(e.target.value)}>
-            <option value="">-- Trigger --</option>
-            <option value="transition">Transition</option>
-            <option value="task_demand">Task demand</option>
-            <option value="loud_noise">Loud noise</option>
-            <option value="unexpected_change">Unexpected change</option>
-            <option value="unexpected_question">Unexpected question</option>
-            <option value="sensory_overload">Sensory overload</option>
-            <option value="peer_conflict">Peer conflict</option>
-          </select>
-          <select value={location} onChange={e => setLocation(e.target.value)}>
-            <option value="classroom">Classroom</option>
-            <option value="hallway">Hallway</option>
-            <option value="cafeteria">Cafeteria</option>
-            <option value="playground">Playground</option>
-            <option value="therapy_room">Therapy room</option>
-          </select>
-        </div>
+            <SectionLabel mt={0}>Antecedent &amp; location</SectionLabel>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
+              <select value={antecedent} onChange={e => setAntecedent(e.target.value)}>
+                <option value="">-- Trigger --</option>
+                <option value="transition">Transition</option>
+                <option value="task_demand">Task demand</option>
+                <option value="loud_noise">Loud noise</option>
+                <option value="unexpected_change">Unexpected change</option>
+                <option value="unexpected_question">Unexpected question</option>
+                <option value="sensory_overload">Sensory overload</option>
+                <option value="peer_conflict">Peer conflict</option>
+              </select>
+              <select value={location} onChange={e => setLocation(e.target.value)}>
+                <option value="classroom">Classroom</option>
+                <option value="hallway">Hallway</option>
+                <option value="cafeteria">Cafeteria</option>
+                <option value="playground">Playground</option>
+                <option value="therapy_room">Therapy room</option>
+              </select>
+            </div>
 
-        <SectionLabel mt={0}>Consequence &amp; activity</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
-          <select value={consequence} onChange={e => setConsequence(e.target.value)}>
-            <option value="">-- Consequence --</option>
-            <option value="sensory_break">Sensory break given</option>
-            <option value="verbal_redirect">Verbal redirect</option>
-            <option value="ignored">Ignored</option>
-            <option value="first_then_board">First/Then board</option>
-            <option value="time_out">Time-out</option>
-            <option value="guided_back">Guided back</option>
-          </select>
-          <select value={activity} onChange={e => setActivity(e.target.value)}>
-            <option value="">-- Activity --</option>
-            <option value="math">Math</option>
-            <option value="reading">Reading</option>
-            <option value="circle_time">Circle time</option>
-            <option value="recess">Recess</option>
-            <option value="lunch">Lunch</option>
-            <option value="art">Art</option>
-          </select>
-        </div>
+            <SectionLabel mt={0}>Consequence &amp; activity</SectionLabel>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
+              <select value={consequence} onChange={e => setConsequence(e.target.value)}>
+                <option value="">-- Consequence --</option>
+                <option value="sensory_break">Sensory break given</option>
+                <option value="verbal_redirect">Verbal redirect</option>
+                <option value="ignored">Ignored</option>
+                <option value="first_then_board">First/Then board</option>
+                <option value="time_out">Time-out</option>
+                <option value="guided_back">Guided back</option>
+              </select>
+              <select value={activity} onChange={e => setActivity(e.target.value)}>
+                <option value="">-- Activity --</option>
+                <option value="math">Math</option>
+                <option value="reading">Reading</option>
+                <option value="circle_time">Circle time</option>
+                <option value="recess">Recess</option>
+                <option value="lunch">Lunch</option>
+                <option value="art">Art</option>
+              </select>
+            </div>
 
-        <SectionLabel mt={0}>Notes</SectionLabel>
-        <textarea placeholder="Type notes here…" value={notes} onChange={e => setNotes(e.target.value)} style={{ marginBottom: 14 }} />
-        <BtnPrimary onClick={handleSave} disabled={loading}>{loading ? 'Saving…' : 'Save behavior log'}</BtnPrimary>
-        </>)}
+            <SectionLabel mt={0}>Notes</SectionLabel>
+            <textarea placeholder="Type notes here…" value={notes} onChange={e => setNotes(e.target.value)} style={{ marginBottom: 14 }} />
+            <BtnPrimary onClick={handleSave} disabled={loading}>{loading ? 'Saving…' : 'Save behavior log'}</BtnPrimary>
+          </>
+        )}
       </div>
     </>
   );
@@ -1187,6 +1345,7 @@ const AddStudentScreen = ({ navigate, token, user }) => {
 };
 
 // ─── SCREEN: Admin Panel ──────────────────────────────────────────────────────
+// FIX: moved role check after hooks to avoid conditional hook call
 const AdminScreen = ({ navigate, token, user }) => {
   const [students, setStudents] = useState([]);
   const [users,    setUsers]    = useState([]);
@@ -1194,21 +1353,24 @@ const AdminScreen = ({ navigate, token, user }) => {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
 
-  if (!['admin','bcba'].includes(user?.role)) return (
-    <>
-      <Topbar left={<div><BtnBack onClick={() => navigate('home')} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2 }}>Admin panel</div></div>} />
-      <div className="scroll"><div style={{ background:'#FCEBEB', borderRadius:8, padding:'12px 14px', fontSize:13, color:'#A32D2D' }}>Admin access only.</div></div>
-    </>
-  );
+  const isAdmin = ['admin','bcba'].includes(user?.role);
 
   useEffect(() => {
+    if (!isAdmin) return;
     Promise.all([
       apiFetch('/api/students/all', {}, token),
       apiFetch('/api/users',        {}, token),
     ]).then(([s, u]) => { setStudents(s); setUsers(u); })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, isAdmin]);
+
+  if (!isAdmin) return (
+    <>
+      <Topbar left={<div><BtnBack onClick={() => navigate('home')} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2 }}>Admin panel</div></div>} />
+      <div className="scroll"><div style={{ background:'#FCEBEB', borderRadius:8, padding:'12px 14px', fontSize:13, color:'#A32D2D' }}>Admin access only.</div></div>
+    </>
+  );
 
   const deleteStudent = async (id, name) => {
     if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
@@ -1270,10 +1432,12 @@ const AdminScreen = ({ navigate, token, user }) => {
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState('login');
-  const [token,  setToken]  = useState(null);
-  const [user,   setUser]   = useState(null);
-  const [ctx,    setCtx]    = useState({});
+  const [screen,       setScreen]       = useState('login');
+  const [token,        setToken]        = useState(null);
+  const [user,         setUser]         = useState(null);
+  const [ctx,          setCtx]          = useState({});
+  const [darkMode,     setDarkMode]     = useState(false);
+  const [showSignOut,  setShowSignOut]  = useState(false);
 
   useEffect(() => {
     refreshAccessToken()
@@ -1295,44 +1459,55 @@ export default function App() {
     await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
     setToken(null); setUser(null); setCtx({});
     setScreen('login');
+    setShowSignOut(false);
   };
 
+  // FIX: navigate to 'log' without a student clears ctx.student so the picker shows fresh
   const navigate = (dest, payload = null) => {
-    if (payload !== null) setCtx(c => ({ ...c, student: payload }));
+    if (dest === 'log' && payload === null) {
+      setCtx(c => ({ ...c, student: null }));
+    } else if (payload !== null) {
+      setCtx(c => ({ ...c, student: payload }));
+    }
     setScreen(dest);
   };
 
-  const commonProps = { navigate, token, user, student: ctx.student };
+  const toggleDark = () => setDarkMode(v => !v);
+
+  const sharedProps = { navigate, token, user };
 
   const screens = {
     login:         <LoginScreen          onLogin={handleLogin} />,
-    home:          <HomeScreen           {...commonProps} />,
-    student:       <StudentScreen        {...commonProps} />,
-    log:           <LogScreen            {...commonProps} />,
-    saved:         <SavedScreen          {...commonProps} />,
-    analytics:     <AnalyticsScreen      {...commonProps} />,
-    interventions: <InterventionsScreen  {...commonProps} />,
-    parent:        <ParentScreen         {...commonProps} />,
-    calendar:      <CalendarScreen       {...commonProps} />,
-    alerts:        <AlertsScreen         {...commonProps} />,
-    addstudent:    <AddStudentScreen     {...commonProps} />,
-    admin:         <AdminScreen          {...commonProps} />,
+    home:          <HomeScreen           {...sharedProps} darkMode={darkMode} onToggleDark={toggleDark} onSignOutRequest={() => setShowSignOut(true)} />,
+    student:       <StudentScreen        {...sharedProps} student={ctx.student} />,
+    // FIX: pass initialStudent so LogScreen can detect fresh-entry vs pre-selected
+    log:           <LogScreen            {...sharedProps} initialStudent={ctx.student} />,
+    saved:         <SavedScreen          {...sharedProps} student={ctx.student} />,
+    analytics:     <AnalyticsScreen      {...sharedProps} student={ctx.student} />,
+    interventions: <InterventionsScreen  {...sharedProps} student={ctx.student} />,
+    parent:        <ParentScreen         {...sharedProps} student={ctx.student} />,
+    calendar:      <CalendarScreen       {...sharedProps} student={ctx.student} />,
+    alerts:        <AlertsScreen         {...sharedProps} />,
+    addstudent:    <AddStudentScreen     {...sharedProps} />,
+    admin:         <AdminScreen          {...sharedProps} />,
   };
 
   return (
-    <div style={{ width: 430, background: 'white', borderRadius: 16, border: '0.5px solid #e0e0e0', overflow: 'hidden', minHeight: 720, display: 'flex', flexDirection: 'column' }}>
+    <div style={{
+      width: 430, background: darkMode ? '#1a1a1a' : 'white',
+      borderRadius: 16, border: '0.5px solid #e0e0e0',
+      overflow: 'hidden', minHeight: 720,
+      display: 'flex', flexDirection: 'column',
+      color: darkMode ? '#f0f0f0' : '#1a1a1a',
+    }}>
       {screens[screen] || <div style={{ padding: 20, color: '#888' }}>Unknown screen.</div>}
 
-      {token && screen !== 'login' && (
-        <div style={{ padding: '6px 18px', borderTop: '0.5px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {['admin','bcba'].includes(user?.role) && (
-            <button onClick={() => navigate('admin')} style={{ background:'none', border:'none', fontSize:11, color:'#1D9E75', cursor:'pointer', fontFamily:'inherit' }}>Admin panel</button>
-          )}
-          {['admin','bcba'].includes(user?.role) && (
-            <button onClick={() => navigate('addstudent')} style={{ background:'none', border:'none', fontSize:11, color:'#1D9E75', cursor:'pointer', fontFamily:'inherit' }}>+ Add student</button>
-          )}
-          <button onClick={handleLogout} style={{ background:'none', border:'none', fontSize:11, color:'#aaa', cursor:'pointer', fontFamily:'inherit', marginLeft:'auto' }}>Sign out</button>
-        </div>
+      {/* Sign out confirmation modal */}
+      {showSignOut && (
+        <SignOutModal
+          onConfirm={handleLogout}
+          onCancel={() => setShowSignOut(false)}
+        />
       )}
     </div>
   );
