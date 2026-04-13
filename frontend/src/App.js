@@ -710,7 +710,7 @@ const SavedScreen = ({ navigate, student, th }) => (
 );
 
 // ─── SCREEN: Analytics ────────────────────────────────────────────────────────
-const AnalyticsScreen = ({ navigate, token, student, th }) => {
+const AnalyticsScreen = ({ navigate, token, student, th, user }) => {
   const [logs,    setLogs]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
@@ -775,7 +775,7 @@ const AnalyticsScreen = ({ navigate, token, student, th }) => {
 };
 
 // ─── SCREEN: Interventions ────────────────────────────────────────────────────
-const InterventionsScreen = ({ navigate, token, student, th }) => {
+const InterventionsScreen = ({ navigate, token, student, th, user }) => {
   const [tab,     setTab]     = useState('eff');
   const [logs,    setLogs]    = useState([]);
   const [loading, setLoading] = useState(true);
@@ -873,7 +873,7 @@ const InterventionsScreen = ({ navigate, token, student, th }) => {
 };
 
 // ─── SCREEN: Family / Parent view ─────────────────────────────────────────────
-const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
+const ParentScreen = ({ navigate, token, student: initialStudent, th, user }) => {
   const [students,       setStudents]       = useState([]);
   const [student,        setStudent]        = useState(initialStudent || null);
   const [logs,           setLogs]           = useState([]);
@@ -1114,7 +1114,7 @@ const ShareScreen = ({ navigate, token, user, th }) => {
 };
 
 // ─── SCREEN: Calendar ─────────────────────────────────────────────────────────
-const CalendarScreen = ({ navigate, token, student, th }) => {
+const CalendarScreen = ({ navigate, token, student, th, user }) => {
   const [logs,         setLogs]         = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading,      setLoading]      = useState(true);
