@@ -421,7 +421,12 @@ const StudentScreen = ({ navigate, token, student, th }) => {
       .then(setLogs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [student, token]);
 
-  if (!student) return <div style={{ padding: 20, color: th?.textMuted || '#888' }}>No student selected.</div>;
+  if (!student) return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center', background: th?.bg || 'white' }}>
+      <div style={{ fontSize: 13, color: th?.textMuted || '#888', marginBottom: 12 }}>No student selected.</div>
+      <button onClick={() => navigate('home')} style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 8, padding: '9px 16px', fontSize: 13, color: '#0F6E56', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Go to Caseload</button>
+    </div>
+  );
 
   const iepGoals    = student.iep_goals      ? (typeof student.iep_goals      === 'string' ? JSON.parse(student.iep_goals)      : student.iep_goals)      : [];
   const sensory     = student.sensory_profile ? (typeof student.sensory_profile === 'string' ? JSON.parse(student.sensory_profile) : student.sensory_profile) : {};
@@ -732,7 +737,14 @@ const AnalyticsScreen = ({ navigate, token, student, th }) => {
       <div className="scroll" style={{ background: th?.bg }}>
         <ErrorBanner message={error} />
         {loading ? <Spinner th={th} /> : !student
-          ? <div style={{ fontSize: 13, color: th?.textMuted || '#888', padding: '20px 0', textAlign: 'center' }}>Go to a student profile and tap "View insights".</div>
+          ? (
+            <div style={{ textAlign: 'center', padding: '30px 0' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: th?.text || '#1a1a1a', marginBottom: 6 }}>No student selected</div>
+              <div style={{ fontSize: 13, color: th?.textMuted || '#888', marginBottom: 16 }}>Go to Caseload, tap a student, then tap "View insights".</div>
+              <button onClick={() => navigate('home')} style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 8, padding: '9px 16px', fontSize: 13, color: '#0F6E56', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Go to Caseload</button>
+            </div>
+          )
           : <>
             <StatGrid>
               <StatCard number={filtered.length} label={`Incidents (${range}d)`} th={th} />
@@ -787,6 +799,19 @@ const InterventionsScreen = ({ navigate, token, student, th }) => {
 
   function rateColor(r) { if (r >= 60) return 'green'; if (r >= 40) return 'amber'; return 'red'; }
   const barColor = { green: '#1D9E75', amber: '#EF9F27', red: '#E24B4A' };
+
+  if (!student) return (
+    <>
+      <Topbar th={th} title="Intervention strategies" subtitle="No student selected" />
+      <div className="scroll" style={{ background: th?.bg, textAlign: 'center', paddingTop: 40 }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>🧩</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: th?.text || '#1a1a1a', marginBottom: 6 }}>No student selected</div>
+        <div style={{ fontSize: 13, color: th?.textMuted || '#888', marginBottom: 16 }}>Go to Caseload and tap a student first.</div>
+        <button onClick={() => navigate('home')} style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 8, padding: '9px 16px', fontSize: 13, color: '#0F6E56', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Go to Caseload</button>
+      </div>
+      <BottomNav current="interventions" navigate={navigate} th={th} user={user} />
+    </>
+  );
 
   return (
     <>
@@ -891,7 +916,12 @@ const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
           <>
             <SectionLabel mt={0} th={th}>Select a student</SectionLabel>
             {studentsLoading ? <Spinner th={th} /> : students.length === 0
-              ? <div style={{ fontSize: 13, color: th?.textMuted || '#888', padding: '12px 0' }}>No students available. Use a student code to get access.</div>
+              ? (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ fontSize: 13, color: th?.textMuted || '#888', marginBottom: 12 }}>No students available yet.</div>
+                  <button onClick={() => navigate('joincode')} style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 8, padding: '9px 16px', fontSize: 13, color: '#0F6E56', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>🔑 Enter a student code</button>
+                </div>
+              )
               : students.map(s => (
                 <div key={s.id} onClick={() => setStudent(s)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: `0.5px solid ${th?.borderLight || '#f0f0f0'}`, cursor: 'pointer' }}>
                   <Avatar initials={getInitials(`${s.first_name} ${s.last_name}`)} color={avatarColor(s.id)} size={40} />
@@ -1089,6 +1119,13 @@ const CalendarScreen = ({ navigate, token, student, th }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState('');
+
+  if (!student) return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center', background: th?.bg || 'white' }}>
+      <div style={{ fontSize: 13, color: th?.textMuted || '#888', marginBottom: 12 }}>No student selected.</div>
+      <button onClick={() => navigate('home')} style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', borderRadius: 8, padding: '9px 16px', fontSize: 13, color: '#0F6E56', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Go to Caseload</button>
+    </div>
+  );
 
   useEffect(() => {
     if (!student?.id) { setLoading(false); return; }
