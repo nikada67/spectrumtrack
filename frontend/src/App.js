@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
-
+ 
 // ─── API config ───────────────────────────────────────────────────────────────
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:4000';
-
+ 
 async function apiFetch(path, options = {}, token = null) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -14,14 +14,14 @@ async function apiFetch(path, options = {}, token = null) {
   }
   return res.json();
 }
-
+ 
 async function refreshAccessToken() {
   const res = await fetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
   if (!res.ok) throw new Error('Session expired');
   const data = await res.json();
   return data.accessToken;
 }
-
+ 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const HomeIcon  = ({ active }) => (<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5" /><polyline points="9 22 9 12 15 12 15 22" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5" /></svg>);
 const PlusIcon  = ({ active }) => (<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5" /><path d="M12 8v8M8 12h8" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5" strokeLinecap="round" /></svg>);
@@ -30,7 +30,7 @@ const CheckIcon = ({ active }) => (<svg width="18" height="18" fill="none" viewB
 const GroupIcon = ({ active }) => (<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const ShareIcon = ({ active }) => (<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5"/><circle cx="6" cy="12" r="3" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5"/><circle cx="18" cy="19" r="3" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke={active ? '#1D9E75' : '#888'} strokeWidth="1.5"/></svg>);
 const EyeIcon   = ({ on }) => (<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d={on ? "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" : "M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"} stroke="#aaa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />{on && <circle cx="12" cy="12" r="3" stroke="#aaa" strokeWidth="1.5" />}</svg>);
-
+ 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const light = {
   bg: 'white', surface: '#f9f9f9', border: '#e8e8e8', borderLight: '#f0f0f0',
@@ -46,7 +46,7 @@ const dark = {
   card: '#1a1a1a', input: '#1e1e1e', inputBorder: '#333',
   tag: '#252525', tagText: '#aaa', tagBorder: '#333',
 };
-
+ 
 // ─── Reusable components ──────────────────────────────────────────────────────
 const Badge = ({ children, color = 'gray' }) => {
   const colors = {
@@ -58,32 +58,32 @@ const Badge = ({ children, color = 'gray' }) => {
   };
   return <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 20, fontWeight: 500, ...colors[color] }}>{children}</span>;
 };
-
+ 
 const Avatar = ({ initials, color = 'green', size = 40 }) => {
   const colors = { green: { background: '#E1F5EE', color: '#0F6E56' }, blue: { background: '#E6F1FB', color: '#185FA5' }, amber: { background: '#FAEEDA', color: '#854F0B' }, pink: { background: '#FBEAF0', color: '#993556' } };
   return <div style={{ width: size, height: size, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 500, fontSize: size * 0.35, flexShrink: 0, ...colors[color] }}>{initials}</div>;
 };
-
+ 
 const SectionLabel = ({ children, mt = 14, th }) => (
   <div style={{ fontSize: 10, fontWeight: 500, color: th?.textMuted || '#888', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 8, marginTop: mt }}>{children}</div>
 );
-
+ 
 const BtnPrimary = ({ children, onClick, style = {}, disabled = false }) => (
   <button onClick={onClick} disabled={disabled} style={{ background: disabled ? '#aaa' : '#1D9E75', color: 'white', border: 'none', padding: '11px 16px', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: disabled ? 'not-allowed' : 'pointer', width: '100%', fontFamily: 'inherit', transition: 'background 0.15s', ...style }}>{children}</button>
 );
-
+ 
 const BtnSecondary = ({ children, onClick, style = {}, th }) => (
   <button onClick={onClick} style={{ background: th?.surface || '#f5f5f5', color: th?.text || '#1a1a1a', border: `0.5px solid ${th?.inputBorder || '#ddd'}`, padding: '8px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', ...style }}>{children}</button>
 );
-
+ 
 const BtnBack = ({ onClick, th }) => (
   <button onClick={onClick} style={{ background: 'none', border: 'none', fontSize: 13, color: '#1D9E75', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>← Back</button>
 );
-
+ 
 const Card = ({ children, style = {}, th }) => (
   <div style={{ background: th?.card || 'white', border: `0.5px solid ${th?.border || '#e8e8e8'}`, borderRadius: 12, padding: '13px 15px', marginBottom: 10, ...style }}>{children}</div>
 );
-
+ 
 const StatGrid  = ({ children }) => <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 14 }}>{children}</div>;
 const StatCard  = ({ number, label, numberColor, th }) => (
   <div style={{ background: th?.surface || '#f9f9f9', borderRadius: 8, padding: '11px 13px' }}>
@@ -104,22 +104,23 @@ const LogItem   = ({ time, behavior, detail, dotColor, th }) => (
 const ErrorBanner   = ({ message }) => message ? <div style={{ background: '#FCEBEB', borderRadius: 8, padding: '10px 14px', marginBottom: 10, fontSize: 12, color: '#A32D2D' }}>{message}</div> : null;
 const SuccessBanner = ({ message }) => message ? <div style={{ background: '#E1F5EE', borderRadius: 8, padding: '10px 14px', marginBottom: 10, fontSize: 12, color: '#0F6E56' }}>{message}</div> : null;
 const Spinner = ({ th }) => <div style={{ textAlign: 'center', padding: 40, color: th?.textMuted || '#888', fontSize: 13 }}>Loading…</div>;
-
+ 
 const Topbar = ({ title, subtitle, left, right, th }) => (
   <div style={{ padding: '14px 18px 12px', borderBottom: `0.5px solid ${th?.border || '#e8e8e8'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: th?.bg || 'white' }}>
     <div>{left || <><div style={{ fontSize: 16, fontWeight: 500, color: th?.text || '#1a1a1a' }}>{title}</div>{subtitle && <div style={{ fontSize: 11, color: th?.textMuted || '#888', marginTop: 2 }}>{subtitle}</div>}</>}</div>
     {right}
   </div>
 );
-
-const BottomNav = ({ current, navigate, th }) => {
+ 
+const BottomNav = ({ current, navigate, th, user }) => {
+  const isAdmin = ['admin','bcba'].includes(user?.role);
   const tabs = [
     { id: 'home',          label: 'Caseload',   Icon: HomeIcon },
     { id: 'log',           label: 'Log',         Icon: PlusIcon },
     { id: 'analytics',     label: 'Insights',    Icon: BarIcon },
     { id: 'interventions', label: 'Strategies',  Icon: CheckIcon },
     { id: 'parent',        label: 'Family',      Icon: GroupIcon },
-    { id: 'share',         label: 'Share',       Icon: ShareIcon },
+    ...(isAdmin ? [{ id: 'share', label: 'Share', Icon: ShareIcon }] : []),
   ];
   return (
     <div style={{ borderTop: `0.5px solid ${th?.border || '#e8e8e8'}`, display: 'flex', padding: '6px 0 2px', flexShrink: 0, background: th?.bg || 'white' }}>
@@ -132,7 +133,7 @@ const BottomNav = ({ current, navigate, th }) => {
     </div>
   );
 };
-
+ 
 // ─── Sign out modal ───────────────────────────────────────────────────────────
 const SignOutModal = ({ onConfirm, onCancel, th }) => (
   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
@@ -146,7 +147,7 @@ const SignOutModal = ({ onConfirm, onCancel, th }) => (
     </div>
   </div>
 );
-
+ 
 // ─── Profile dropdown ─────────────────────────────────────────────────────────
 const ProfileDropdown = ({ user, navigate, darkMode, onToggleDark, onSignOutRequest, th }) => {
   const [open, setOpen] = useState(false);
@@ -177,13 +178,14 @@ const ProfileDropdown = ({ user, navigate, darkMode, onToggleDark, onSignOutRequ
           </button>
           {isAdmin && menuBtn(() => { navigate('admin'); setOpen(false); }, '🛠️  Admin panel')}
           {['admin','bcba','teacher'].includes(user?.role) && menuBtn(() => { navigate('addstudent'); setOpen(false); }, '👤  Add student')}
+          {!isAdmin && menuBtn(() => { navigate('joincode'); setOpen(false); }, '🔑  Enter a code')}
           {menuBtn(() => { onSignOutRequest(); setOpen(false); }, '🚪  Sign out', '#E24B4A')}
         </div>
       )}
     </div>
   );
 };
-
+ 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getInitials(name = '') { return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join(''); }
 const AVATAR_COLORS = ['green', 'blue', 'amber', 'pink'];
@@ -196,7 +198,7 @@ function formatTime(ts) {
   return isToday ? `Today, ${time}` : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${time}`;
 }
 function intensityColor(n) { return { 1: '#5DCAA5', 2: '#5DCAA5', 3: '#EF9F27', 4: '#E24B4A', 5: '#E24B4A' }[n] || '#888'; }
-
+ 
 // ─── SCREEN: Login / Register + Join Code ─────────────────────────────────────
 const LoginScreen = ({ onLogin }) => {
   const [tab,       setTab]       = useState('login');
@@ -217,12 +219,12 @@ const LoginScreen = ({ onLogin }) => {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
   const [success,  setSuccess]  = useState('');
-
+ 
   const switchTab = (t) => { setTab(t); setError(''); setSuccess(''); };
-
+ 
   const inp = { width: '100%', padding: '11px 13px', borderRadius: 8, border: '0.5px solid #ddd', fontSize: 13, fontFamily: 'inherit', background: '#fafafa', outline: 'none', boxSizing: 'border-box' };
   const lbl = { fontSize: 11, color: '#888', display: 'block', marginBottom: 4 };
-
+ 
   const handleLogin = async () => {
     if (!email || !password) { setError('Email and password required'); return; }
     setLoading(true); setError('');
@@ -232,7 +234,7 @@ const LoginScreen = ({ onLogin }) => {
     } catch (err) { setError(err.message || 'Login failed'); }
     finally { setLoading(false); }
   };
-
+ 
   const handleRegister = async () => {
     if (!firstName || !lastName || !regEmail || !regPw) { setError('All fields are required'); return; }
     if (regPw !== regPw2) { setError('Passwords do not match'); return; }
@@ -240,15 +242,14 @@ const LoginScreen = ({ onLogin }) => {
     setLoading(true); setError('');
     try {
       await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ firstName, lastName, email: regEmail, password: regPw, role }) });
-      // Auto-login to get token for join step
-      const data = await apiFetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: regEmail, password: regPw }) });
-      setJoinToken(data.accessToken);
-      setSuccess('Account created! Enter your class or student code below to get access.');
-      switchTab('join');
+      // Just show success and switch to login
+      setSuccess('Account created! You can now sign in.');
+      setFirstName(''); setLastName(''); setRegEmail(''); setRegPw(''); setRegPw2('');
+      setTimeout(() => switchTab('login'), 1500);
     } catch (err) { setError(err.message || 'Registration failed'); }
     finally { setLoading(false); }
   };
-
+ 
   const handleJoin = async () => {
     if (!joinCode.trim()) { setError('Please enter a code'); return; }
     setJoinLoading(true); setError('');
@@ -261,7 +262,7 @@ const LoginScreen = ({ onLogin }) => {
     } catch (err) { setError(err.message || 'Invalid code'); }
     finally { setJoinLoading(false); }
   };
-
+ 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', background: 'white' }}>
       <div style={{ padding: '36px 32px 24px', textAlign: 'center', borderBottom: '0.5px solid #f0f0f0' }}>
@@ -273,19 +274,19 @@ const LoginScreen = ({ onLogin }) => {
         </div>
         <div style={{ fontSize: 12, color: '#aaa' }}>Track. Understand. Support.</div>
       </div>
-
+ 
       <div style={{ display: 'flex', margin: '20px 24px 0', background: '#f5f5f5', borderRadius: 10, padding: 3 }}>
-        {['login', 'register', 'join'].map(t => (
+        {['login', 'register'].map(t => (
           <button key={t} onClick={() => switchTab(t)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 500, background: tab === t ? 'white' : 'transparent', color: tab === t ? '#1a1a1a' : '#888', boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
-            {t === 'login' ? 'Sign in' : t === 'register' ? 'Register' : 'Join class'}
+            {t === 'login' ? 'Sign in' : 'Register'}
           </button>
         ))}
       </div>
-
+ 
       <div style={{ padding: '20px 24px 32px' }}>
         <ErrorBanner message={error} />
         <SuccessBanner message={success} />
-
+ 
         {tab === 'login' && (
           <>
             <div style={{ marginBottom: 12 }}><label style={lbl}>Email address</label><input type="text" placeholder="you@school.edu" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} style={inp} /></div>
@@ -299,7 +300,7 @@ const LoginScreen = ({ onLogin }) => {
             <BtnPrimary onClick={handleLogin} disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</BtnPrimary>
           </>
         )}
-
+ 
         {tab === 'register' && (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -339,44 +340,28 @@ const LoginScreen = ({ onLogin }) => {
             <div style={{ fontSize: 11, color: '#bbb', textAlign: 'center', marginTop: 12, lineHeight: 1.5 }}>BCBA / admin accounts are created by your school administrator.</div>
           </>
         )}
-
-        {tab === 'join' && (
-          <>
-            <div style={{ background: '#f9f9f9', borderRadius: 10, padding: '14px', marginBottom: 16, fontSize: 12, color: '#666', lineHeight: 1.6 }}>
-              Enter the <strong>class code</strong> given by your teacher (to see all students), or a <strong>student code</strong> shared by the admin (to link to a specific child as a parent).
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={lbl}>Your code</label>
-              <input type="text" placeholder="e.g. TRK4821" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleJoin()} style={{ ...inp, textTransform: 'uppercase', letterSpacing: 2, fontSize: 16, textAlign: 'center' }} />
-            </div>
-            <BtnPrimary onClick={handleJoin} disabled={joinLoading}>{joinLoading ? 'Verifying…' : 'Join'}</BtnPrimary>
-            {joinToken && (
-              <button onClick={() => { const me = apiFetch('/api/auth/me',{},joinToken).then(u => onLogin(joinToken,u)); }} style={{ marginTop: 12, background: 'none', border: 'none', fontSize: 12, color: '#aaa', cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'center' }}>
-                Skip for now →
-              </button>
-            )}
-          </>
-        )}
+ 
+ 
       </div>
     </div>
   );
 };
-
+ 
 // ─── SCREEN: Home ─────────────────────────────────────────────────────────────
 const HomeScreen = ({ navigate, token, user, onSignOutRequest, darkMode, onToggleDark, th }) => {
   const [students, setStudents] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
-
+ 
   useEffect(() => {
     apiFetch('/api/students', {}, token)
       .then(setStudents).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [token]);
-
+ 
   function badgeColor(count) {
     if (count >= 5) return 'red'; if (count >= 2) return 'amber'; if (count === 0) return 'gray'; return 'green';
   }
-
+ 
   return (
     <>
       <Topbar th={th}
@@ -410,30 +395,30 @@ const HomeScreen = ({ navigate, token, user, onSignOutRequest, darkMode, onToggl
           </>
         )}
       </div>
-      <BottomNav current="home" navigate={navigate} th={th} />
+      <BottomNav current="home" navigate={navigate} th={th} user={user} />
     </>
   );
 };
-
+ 
 // ─── SCREEN: Student Profile ──────────────────────────────────────────────────
 const StudentScreen = ({ navigate, token, student, th }) => {
   const [logs,    setLogs]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
-
+ 
   useEffect(() => {
     if (!student?.id) return;
     apiFetch(`/api/logs?student_id=${student.id}&limit=5`, {}, token)
       .then(setLogs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [student, token]);
-
+ 
   if (!student) return <div style={{ padding: 20, color: th?.textMuted || '#888' }}>No student selected.</div>;
-
+ 
   const iepGoals    = student.iep_goals      ? (typeof student.iep_goals      === 'string' ? JSON.parse(student.iep_goals)      : student.iep_goals)      : [];
   const sensory     = student.sensory_profile ? (typeof student.sensory_profile === 'string' ? JSON.parse(student.sensory_profile) : student.sensory_profile) : {};
   const reinforcers = student.reinforcers     ? (typeof student.reinforcers     === 'string' ? JSON.parse(student.reinforcers)     : student.reinforcers)     : [];
   const sensoryTags = Object.entries(sensory).filter(([, v]) => v).map(([k]) => k.replace(/_/g, ' '));
-
+ 
   return (
     <>
       <Topbar th={th}
@@ -484,7 +469,7 @@ const StudentScreen = ({ navigate, token, student, th }) => {
     </>
   );
 };
-
+ 
 // ─── SCREEN: Log Behavior ─────────────────────────────────────────────────────
 const LogScreen = ({ navigate, token, initialStudent, th }) => {
   const [selectedStudent, setSelectedStudent] = useState(initialStudent || null);
@@ -502,34 +487,34 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
   const [running,  setRunning]  = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
-
+ 
   useEffect(() => {
     setSelectedStudent(initialStudent || null);
     setSelBeh(''); setSelInt(null); setAntecedent(''); setConsequence('');
     setLocation('classroom'); setActivity(''); setInterventionUsed(''); setInterventionSuccess(null);
     setNotes(''); setTimerSecs(0); setRunning(false);
   }, [initialStudent]);
-
+ 
   useEffect(() => {
     if (!initialStudent) apiFetch('/api/students', {}, token).then(setStudents).catch(() => {});
   }, [initialStudent, token]);
-
+ 
   const startTimeRef = useRef(new Date());
   const intervalRef  = useRef(null);
-
+ 
   useEffect(() => {
     if (running) intervalRef.current = setInterval(() => setTimerSecs(s => s + 1), 1000);
     else clearInterval(intervalRef.current);
     return () => clearInterval(intervalRef.current);
   }, [running]);
-
+ 
   const handleTimerToggle = () => {
     if (!running && timerSecs === 0) startTimeRef.current = new Date();
     setRunning(r => !r);
   };
   const resetTimer = () => { setRunning(false); setTimerSecs(0); startTimeRef.current = new Date(); };
   const mins = Math.floor(timerSecs / 60), secs = timerSecs % 60;
-
+ 
   const behaviors = [
     { id: 'aggression',  icon: '⚡', label: 'Aggression' },
     { id: 'elopement',   icon: '🚪', label: 'Elopement' },
@@ -538,19 +523,19 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
     { id: 'self_injury', icon: '🛑', label: 'Self-injury' },
     { id: 'other',       icon: '+',  label: 'Other' },
   ];
-
+ 
   const interventionOptions = [
     'Sensory break', 'Verbal redirect', 'First/Then board', 'Visual schedule',
     'Calm-down corner', 'Deep pressure', 'Token economy', 'Choice board',
     'Time-out', 'Guided back', 'Ignored', 'Praise/reinforcement',
   ];
-
+ 
   const intColors  = ['','#085041','#633806','#712B13','#791F1F','#501313'];
   const intBgs     = ['','#E1F5EE','#FAEEDA','#FAECE7','#FCEBEB','#FCEBEB'];
   const intBorders = ['','#9FE1CB','#FAC775','#F0997B','#F09595','#E24B4A'];
-
+ 
   const sel = { padding: '9px 11px', borderRadius: 8, border: `0.5px solid ${th?.inputBorder || '#ddd'}`, fontSize: 13, fontFamily: 'inherit', background: th?.input || '#fafafa', color: th?.text || '#1a1a1a', width: '100%' };
-
+ 
   const handleSave = async () => {
     if (!selBeh) { setError('Please select a behavior type'); return; }
     if (!selectedStudent?.id) { setError('No student selected'); return; }
@@ -573,13 +558,13 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
     } catch (err) { setError(err.message || 'Failed to save log'); }
     finally { setLoading(false); }
   };
-
+ 
   const handleBack = () => {
     if (initialStudent) navigate('student', initialStudent);
     else if (selectedStudent) { setSelectedStudent(null); setSelBeh(''); setSelInt(null); setAntecedent(''); setConsequence(''); setLocation('classroom'); setActivity(''); setInterventionUsed(''); setInterventionSuccess(null); setNotes(''); setTimerSecs(0); setRunning(false); }
     else navigate('home');
   };
-
+ 
   return (
     <>
       <Topbar th={th}
@@ -600,7 +585,7 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
               ))}
           </>
         )}
-
+ 
         {selectedStudent && (
           <>
             <SectionLabel mt={0} th={th}>Behavior type</SectionLabel>
@@ -611,7 +596,7 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
                 </button>
               ))}
             </div>
-
+ 
             <SectionLabel mt={0} th={th}>Duration timer</SectionLabel>
             <div style={{ background: th?.surface || '#f9f9f9', borderRadius: 8, padding: 12, textAlign: 'center', marginBottom: 14 }}>
               <div style={{ fontSize: 28, fontWeight: 500, letterSpacing: 2, marginBottom: 8, color: th?.text || '#1a1a1a' }}>{mins}:{secs < 10 ? '0' : ''}{secs}</div>
@@ -620,14 +605,14 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
                 <BtnSecondary onClick={resetTimer} style={{ padding: '7px 14px', fontSize: 12 }} th={th}>Reset</BtnSecondary>
               </div>
             </div>
-
+ 
             <SectionLabel mt={0} th={th}>Intensity (1–5)</SectionLabel>
             <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
               {[1,2,3,4,5].map(n => (
                 <button key={n} onClick={() => setSelInt(n)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: `1.5px solid ${selInt === n ? intBorders[n] : (th?.border || '#e0e0e0')}`, background: selInt === n ? intBgs[n] : 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: selInt === n ? intColors[n] : (th?.textMuted || '#888'), fontFamily: 'inherit' }}>{n}</button>
               ))}
             </div>
-
+ 
             <SectionLabel mt={0} th={th}>Antecedent &amp; location</SectionLabel>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
               <select value={antecedent} onChange={e => setAntecedent(e.target.value)} style={sel}>
@@ -647,7 +632,7 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
                 <option value="therapy_room">Therapy room</option>
               </select>
             </div>
-
+ 
             <SectionLabel mt={0} th={th}>Consequence &amp; activity</SectionLabel>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginBottom: 10 }}>
               <select value={consequence} onChange={e => setConsequence(e.target.value)} style={sel}>
@@ -669,13 +654,13 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
                 <option value="art">Art</option>
               </select>
             </div>
-
+ 
             <SectionLabel mt={0} th={th}>Intervention used</SectionLabel>
             <select value={interventionUsed} onChange={e => setInterventionUsed(e.target.value)} style={{ ...sel, marginBottom: 10 }}>
               <option value="">-- None / select --</option>
               {interventionOptions.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-
+ 
             {interventionUsed && (
               <>
                 <SectionLabel mt={0} th={th}>Was it successful?</SectionLabel>
@@ -686,7 +671,7 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
                 </div>
               </>
             )}
-
+ 
             <SectionLabel mt={0} th={th}>Notes</SectionLabel>
             <textarea placeholder="Type notes here…" value={notes} onChange={e => setNotes(e.target.value)} style={{ marginBottom: 14, background: th?.input || '#fafafa', color: th?.text || '#1a1a1a', border: `0.5px solid ${th?.inputBorder || '#ddd'}` }} />
             <BtnPrimary onClick={handleSave} disabled={loading}>{loading ? 'Saving…' : 'Save behavior log'}</BtnPrimary>
@@ -696,7 +681,7 @@ const LogScreen = ({ navigate, token, initialStudent, th }) => {
     </>
   );
 };
-
+ 
 // ─── SCREEN: Saved ────────────────────────────────────────────────────────────
 const SavedScreen = ({ navigate, student, th }) => (
   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center', background: th?.bg || 'white' }}>
@@ -709,27 +694,27 @@ const SavedScreen = ({ navigate, student, th }) => (
     <BtnSecondary onClick={() => navigate('home')} style={{ width: '100%' }} th={th}>Back to caseload</BtnSecondary>
   </div>
 );
-
+ 
 // ─── SCREEN: Analytics ────────────────────────────────────────────────────────
 const AnalyticsScreen = ({ navigate, token, student, th }) => {
   const [logs,    setLogs]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
   const [range,   setRange]   = useState('7');
-
+ 
   useEffect(() => {
     if (!student?.id) { setLoading(false); return; }
     apiFetch(`/api/logs?student_id=${student.id}&limit=200`, {}, token)
       .then(setLogs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [student, token]);
-
+ 
   const cutoff   = new Date(Date.now() - parseInt(range) * 24 * 60 * 60 * 1000);
   const filtered = logs.filter(l => new Date(l.start_time) >= cutoff);
   const counts   = filtered.reduce((acc, l) => { acc[l.behavior_type] = (acc[l.behavior_type] || 0) + 1; return acc; }, {});
   const sorted   = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const maxCount = sorted[0]?.[1] || 1;
   const bColors  = { aggression: '#E24B4A', elopement: '#EF9F27', stimming: '#5DCAA5', shutdown: '#378ADD', self_injury: '#9B59B6', other: '#888' };
-
+ 
   return (
     <>
       <Topbar th={th} title="Insights" subtitle={student ? `${student.first_name} ${student.last_name} · Last ${range} days` : 'Select a student'}
@@ -763,24 +748,24 @@ const AnalyticsScreen = ({ navigate, token, student, th }) => {
           </>
         }
       </div>
-      <BottomNav current="analytics" navigate={navigate} th={th} />
+      <BottomNav current="analytics" navigate={navigate} th={th} user={user} />
     </>
   );
 };
-
+ 
 // ─── SCREEN: Interventions ────────────────────────────────────────────────────
 const InterventionsScreen = ({ navigate, token, student, th }) => {
   const [tab,     setTab]     = useState('eff');
   const [logs,    setLogs]    = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
-
+ 
   useEffect(() => {
     if (!student?.id) { setLoading(false); return; }
     apiFetch(`/api/logs?student_id=${student.id}&limit=200`, {}, token)
       .then(setLogs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [student, token]);
-
+ 
   const strategyMap = {};
   logs.filter(l => l.intervention_used).forEach(l => {
     if (!strategyMap[l.intervention_used]) strategyMap[l.intervention_used] = { used: 0, successful: 0 };
@@ -790,10 +775,10 @@ const InterventionsScreen = ({ navigate, token, student, th }) => {
   const strategies = Object.entries(strategyMap)
     .map(([name, { used, successful }]) => ({ name, used, rate: Math.round((successful / used) * 100) }))
     .sort((a, b) => b.rate - a.rate);
-
+ 
   function rateColor(r) { if (r >= 60) return 'green'; if (r >= 40) return 'amber'; return 'red'; }
   const barColor = { green: '#1D9E75', amber: '#EF9F27', red: '#E24B4A' };
-
+ 
   return (
     <>
       <Topbar th={th} left={<div><BtnBack onClick={() => navigate('analytics', student)} th={th} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2, color: th?.text || '#1a1a1a' }}>Intervention strategies</div></div>} />
@@ -848,11 +833,11 @@ const InterventionsScreen = ({ navigate, token, student, th }) => {
           </>
         )}
       </div>
-      <BottomNav current="interventions" navigate={navigate} th={th} />
+      <BottomNav current="interventions" navigate={navigate} th={th} user={user} />
     </>
   );
 };
-
+ 
 // ─── SCREEN: Family / Parent view ─────────────────────────────────────────────
 const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
   const [students,       setStudents]       = useState([]);
@@ -861,20 +846,20 @@ const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
   const [loading,        setLoading]        = useState(false);
   const [studentsLoading,setStudentsLoading]= useState(true);
   const [error,          setError]          = useState('');
-
+ 
   // Load student list so family can pick directly
   useEffect(() => {
     apiFetch('/api/students', {}, token)
       .then(setStudents).catch(() => {}).finally(() => setStudentsLoading(false));
   }, [token]);
-
+ 
   useEffect(() => {
     if (!student?.id) return;
     setLoading(true);
     apiFetch(`/api/logs?student_id=${student.id}&limit=50`, {}, token)
       .then(setLogs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [student, token]);
-
+ 
   const today    = new Date().toDateString();
   const todayLogs= logs.filter(l => new Date(l.start_time).toDateString() === today);
   const weekAgo  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -885,13 +870,13 @@ const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
     const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0];
     return top ? top[0] : null;
   })();
-
+ 
   return (
     <>
       <Topbar th={th} title="Family view" subtitle={student ? `${student.first_name} ${student.last_name} · Read-only` : 'Select a student'} />
       <div className="scroll" style={{ background: th?.bg }}>
         <ErrorBanner message={error} />
-
+ 
         {/* Student picker */}
         {!student && (
           <>
@@ -910,7 +895,7 @@ const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
             }
           </>
         )}
-
+ 
         {student && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -951,29 +936,73 @@ const ParentScreen = ({ navigate, token, student: initialStudent, th }) => {
           </>
         )}
       </div>
-      <BottomNav current="parent" navigate={navigate} th={th} />
+      <BottomNav current="parent" navigate={navigate} th={th} user={user} />
     </>
   );
 };
-
-// ─── SCREEN: Share / Codes ────────────────────────────────────────────────────
+ 
+// ─── SCREEN: Join Code (inside app) ──────────────────────────────────────────
+const JoinCodeScreen = ({ navigate, token, user, th }) => {
+  const [code,    setCode]    = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const [success, setSuccess] = useState('');
+ 
+  const handleJoin = async () => {
+    if (!code.trim()) { setError('Please enter a code'); return; }
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      const result = await apiFetch('/api/auth/join', { method: 'POST', body: JSON.stringify({ code }) }, token);
+      setSuccess(`✓ ${result.message}`);
+      setTimeout(() => navigate('home'), 1500);
+    } catch (err) { setError(err.message || 'Invalid code'); }
+    finally { setLoading(false); }
+  };
+ 
+  return (
+    <>
+      <Topbar th={th} left={<div><BtnBack onClick={() => navigate('home')} th={th} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2, color: th?.text || '#1a1a1a' }}>Enter a code</div></div>} />
+      <div className="scroll" style={{ background: th?.bg }}>
+        <ErrorBanner message={error} />
+        <SuccessBanner message={success} />
+        <div style={{ background: th?.surface || '#f9f9f9', borderRadius: 10, padding: 14, marginBottom: 20, fontSize: 13, color: th?.textMuted || '#666', lineHeight: 1.6 }}>
+          Enter the <strong style={{ color: th?.text || '#1a1a1a' }}>class code</strong> from your teacher to see all students, or a <strong style={{ color: th?.text || '#1a1a1a' }}>student code</strong> from the admin to link to a specific child.
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: th?.textMuted || '#888', marginBottom: 4 }}>Your code</div>
+          <input
+            type="text"
+            placeholder="e.g. 0C46ADE5"
+            value={code}
+            onChange={e => setCode(e.target.value.toUpperCase())}
+            onKeyDown={e => e.key === 'Enter' && handleJoin()}
+            style={{ width: '100%', padding: '13px', borderRadius: 8, border: `0.5px solid ${th?.inputBorder || '#ddd'}`, fontSize: 18, fontFamily: 'inherit', background: th?.input || '#fafafa', color: th?.text || '#1a1a1a', textTransform: 'uppercase', letterSpacing: 3, textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+        <BtnPrimary onClick={handleJoin} disabled={loading}>{loading ? 'Verifying…' : 'Join'}</BtnPrimary>
+      </div>
+    </>
+  );
+};
+ 
+ 
 const ShareScreen = ({ navigate, token, user, th }) => {
   const [codes,   setCodes]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
   const [copied,  setCopied]  = useState('');
   const isAdmin = ['admin','bcba'].includes(user?.role);
-
+ 
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
     apiFetch('/api/auth/codes', {}, token)
       .then(setCodes).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [token, isAdmin]);
-
+ 
   const copyCode = (code, label) => {
     navigator.clipboard.writeText(code).then(() => { setCopied(label); setTimeout(() => setCopied(''), 2000); });
   };
-
+ 
   // QR placeholder — a simple grid pattern suggesting a QR code
   const QRPlaceholder = ({ code }) => (
     <div style={{ display: 'inline-block', background: 'white', padding: 10, borderRadius: 8, border: '0.5px solid #e0e0e0' }}>
@@ -987,7 +1016,7 @@ const ShareScreen = ({ navigate, token, user, th }) => {
       <div style={{ fontSize: 10, textAlign: 'center', marginTop: 6, letterSpacing: 2, fontWeight: 600, color: '#1a1a1a' }}>{code}</div>
     </div>
   );
-
+ 
   return (
     <>
       <Topbar th={th} title="Share access" subtitle="Codes for teachers & parents" />
@@ -995,7 +1024,7 @@ const ShareScreen = ({ navigate, token, user, th }) => {
         <ErrorBanner message={error} />
         {!isAdmin ? (
           <div style={{ background: th?.surface || '#f9f9f9', borderRadius: 10, padding: 16, fontSize: 13, color: th?.textMuted || '#888', lineHeight: 1.6 }}>
-            Ask your admin or BCBA for the class code (teachers) or your child's student code (parents), then go to <strong>Sign in → Join class</strong> to enter it.
+            Ask your admin or BCBA for the class code (teachers) or your child's student code (parents), then tap your <strong>profile avatar</strong> → <strong>Enter a code</strong> to link your account.
           </div>
         ) : loading ? <Spinner th={th} /> : (
           <>
@@ -1014,7 +1043,7 @@ const ShareScreen = ({ navigate, token, user, th }) => {
                 </>
               ) : <div style={{ color: th?.textMuted || '#888', fontSize: 13 }}>No class code set. Run the migration SQL to generate one.</div>}
             </Card>
-
+ 
             {/* Per-student parent codes */}
             <SectionLabel mt={0} th={th}>Student codes (for parents)</SectionLabel>
             {codes?.students?.length === 0
@@ -1037,33 +1066,33 @@ const ShareScreen = ({ navigate, token, user, th }) => {
           </>
         )}
       </div>
-      <BottomNav current="share" navigate={navigate} th={th} />
+      <BottomNav current="share" navigate={navigate} th={th} user={user} />
     </>
   );
 };
-
+ 
 // ─── SCREEN: Calendar ─────────────────────────────────────────────────────────
 const CalendarScreen = ({ navigate, token, student, th }) => {
   const [logs,         setLogs]         = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState('');
-
+ 
   useEffect(() => {
     if (!student?.id) { setLoading(false); return; }
     apiFetch(`/api/logs?student_id=${student.id}&limit=500`, {}, token)
       .then(setLogs).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [student, token]);
-
+ 
   const now = new Date(), year = now.getFullYear(), month = now.getMonth();
   const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
   const countsByDate = logs.reduce((acc, l) => { const d = new Date(l.start_time).toDateString(); acc[d] = (acc[d] || 0) + 1; return acc; }, {});
   const selectedLogs = selectedDate ? logs.filter(l => new Date(l.start_time).toDateString() === selectedDate.toDateString()) : [];
-
+ 
   const dayCells = [];
   for (let i = 0; i < firstDay; i++) dayCells.push(null);
   for (let d = 1; d <= daysInMonth; d++) dayCells.push(new Date(year, month, d));
-
+ 
   function dayType(d) {
     if (!d) return 'empty';
     const count = countsByDate[d.toDateString()] || 0;
@@ -1071,7 +1100,7 @@ const CalendarScreen = ({ navigate, token, student, th }) => {
   }
   const dayBg    = { empty: 'transparent', none: 'transparent', has: '#E1F5EE', high: '#FCEBEB' };
   const dayColor = { empty: 'transparent', none: th?.textFaint || '#ccc', has: '#085041', high: '#791F1F' };
-
+ 
   return (
     <>
       <Topbar th={th} left={<div><BtnBack onClick={() => navigate('student', student)} th={th} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2, color: th?.text || '#1a1a1a' }}>Calendar — {now.toLocaleDateString([], { month: 'long', year: 'numeric' })}</div></div>} />
@@ -1110,28 +1139,28 @@ const CalendarScreen = ({ navigate, token, student, th }) => {
     </>
   );
 };
-
+ 
 // ─── SCREEN: Alerts ───────────────────────────────────────────────────────────
 const AlertsScreen = ({ navigate, token, user, th }) => {
   const [alerts,  setAlerts]  = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
-
+ 
   const loadAlerts = useCallback(() => {
     apiFetch('/api/alerts', {}, token).then(setAlerts).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [token]);
-
+ 
   useEffect(() => { loadAlerts(); }, [loadAlerts]);
-
+ 
   const toggleAlert = async (alert) => {
     try {
       await apiFetch(`/api/alerts/${alert.id}`, { method: 'PATCH', body: JSON.stringify({ active: !alert.active }) }, token);
       loadAlerts();
     } catch (err) { setError(err.message); }
   };
-
+ 
   const active = alerts.filter(a => a.active), paused = alerts.filter(a => !a.active);
-
+ 
   return (
     <>
       <Topbar th={th} left={<div><BtnBack onClick={() => navigate('home')} th={th} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2, color: th?.text || '#1a1a1a' }}>Alert rules</div></div>} />
@@ -1180,7 +1209,7 @@ const AlertsScreen = ({ navigate, token, user, th }) => {
     </>
   );
 };
-
+ 
 // ─── SCREEN: Add Student ──────────────────────────────────────────────────────
 const AddStudentScreen = ({ navigate, token, user, th }) => {
   const [firstName,   setFirstName]   = useState('');
@@ -1192,13 +1221,13 @@ const AddStudentScreen = ({ navigate, token, user, th }) => {
   const [iepGoals,    setIepGoals]    = useState([{ name: '', target: '' }]);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
-
+ 
   const sensoryOptions = ['Auditory sensitivity','Tactile avoidance','Visual overstimulation','Proprioceptive seeking','Vestibular seeking','Oral sensitivity'];
   const toggleSensory  = (s) => setSensory(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   const addGoal        = () => setIepGoals(g => [...g, { name: '', target: '' }]);
   const updateGoal     = (i, field, val) => setIepGoals(g => g.map((goal, idx) => idx === i ? { ...goal, [field]: val } : goal));
   const removeGoal     = (i) => setIepGoals(g => g.filter((_, idx) => idx !== i));
-
+ 
   const canAdd = ['admin','teacher','bcba'].includes(user?.role);
   if (!canAdd) return (
     <>
@@ -1206,7 +1235,7 @@ const AddStudentScreen = ({ navigate, token, user, th }) => {
       <div className="scroll" style={{ background: th?.bg }}><div style={{ background:'#FCEBEB', borderRadius:8, padding:'12px 14px', fontSize:13, color:'#A32D2D' }}>Only admins, teachers, and BCBAs can add students.</div></div>
     </>
   );
-
+ 
   const handleSave = async () => {
     if (!firstName || !lastName) { setError('First and last name are required'); return; }
     setLoading(true); setError('');
@@ -1223,10 +1252,10 @@ const AddStudentScreen = ({ navigate, token, user, th }) => {
     } catch (err) { setError(err.message || 'Failed to add student'); }
     finally { setLoading(false); }
   };
-
+ 
   const inp = { width:'100%', padding:'9px 11px', borderRadius:8, border:`0.5px solid ${th?.inputBorder || '#ddd'}`, fontSize:13, fontFamily:'inherit', outline:'none', background: th?.input || '#fafafa', color: th?.text || '#1a1a1a' };
   const lbl = { fontSize:11, color: th?.textMuted || '#888', display:'block', marginBottom:4 };
-
+ 
   return (
     <>
       <Topbar th={th} left={<div><BtnBack onClick={() => navigate('home')} th={th} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2, color: th?.text || '#1a1a1a' }}>Add student</div></div>} />
@@ -1273,7 +1302,7 @@ const AddStudentScreen = ({ navigate, token, user, th }) => {
     </>
   );
 };
-
+ 
 // ─── SCREEN: Admin Panel ──────────────────────────────────────────────────────
 const AdminScreen = ({ navigate, token, user, th }) => {
   const [students, setStudents] = useState([]);
@@ -1282,7 +1311,7 @@ const AdminScreen = ({ navigate, token, user, th }) => {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
   const isAdmin = ['admin','bcba'].includes(user?.role);
-
+ 
   // Hooks always called — role check only affects rendering
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
@@ -1293,7 +1322,7 @@ const AdminScreen = ({ navigate, token, user, th }) => {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [token, isAdmin]);
-
+ 
   const deleteStudent = async (id, name) => {
     if (!window.confirm(`Delete ${name}? This cannot be undone.`)) return;
     try {
@@ -1301,14 +1330,14 @@ const AdminScreen = ({ navigate, token, user, th }) => {
       setStudents(prev => prev.filter(s => s.id !== id));
     } catch (err) { setError(err.message); }
   };
-
+ 
   if (!isAdmin) return (
     <>
       <Topbar th={th} left={<div><BtnBack onClick={() => navigate('home')} th={th} /><div style={{ fontSize: 16, fontWeight: 500, marginTop: 2, color: th?.text || '#1a1a1a' }}>Admin panel</div></div>} />
       <div className="scroll" style={{ background: th?.bg }}><div style={{ background:'#FCEBEB', borderRadius:8, padding:'12px 14px', fontSize:13, color:'#A32D2D' }}>Admin access only.</div></div>
     </>
   );
-
+ 
   return (
     <>
       <Topbar th={th}
@@ -1354,7 +1383,7 @@ const AdminScreen = ({ navigate, token, user, th }) => {
     </>
   );
 };
-
+ 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,      setScreen]      = useState('login');
@@ -1363,32 +1392,32 @@ export default function App() {
   const [ctx,         setCtx]         = useState({});
   const [darkMode,    setDarkMode]    = useState(false);
   const [showSignOut, setShowSignOut] = useState(false);
-
+ 
   const th = darkMode ? dark : light;
-
+ 
   useEffect(() => {
     refreshAccessToken()
       .then(accessToken => { setToken(accessToken); return apiFetch('/api/auth/me', {}, accessToken); })
       .then(me => { setUser(me); setScreen('home'); })
       .catch(() => setScreen('login'));
   }, []);
-
+ 
   const handleLogin = (accessToken, userData) => { setToken(accessToken); setUser(userData); setScreen('home'); };
-
+ 
   const handleLogout = async () => {
     await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
     setToken(null); setUser(null); setCtx({});
     setScreen('login'); setShowSignOut(false);
   };
-
+ 
   const navigate = (dest, payload = null) => {
     if (dest === 'log' && payload === null) setCtx(c => ({ ...c, student: null }));
     else if (payload !== null) setCtx(c => ({ ...c, student: payload }));
     setScreen(dest);
   };
-
+ 
   const shared = { navigate, token, user, th };
-
+ 
   const screens = {
     login:         <LoginScreen onLogin={handleLogin} />,
     home:          <HomeScreen  {...shared} darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} onSignOutRequest={() => setShowSignOut(true)} />,
@@ -1399,12 +1428,13 @@ export default function App() {
     interventions: <InterventionsScreen  {...shared} student={ctx.student} />,
     parent:        <ParentScreen         {...shared} student={ctx.student} />,
     share:         <ShareScreen          {...shared} />,
+    joincode:      <JoinCodeScreen       {...shared} />,
     calendar:      <CalendarScreen       {...shared} student={ctx.student} />,
     alerts:        <AlertsScreen         {...shared} />,
     addstudent:    <AddStudentScreen     {...shared} />,
     admin:         <AdminScreen          {...shared} />,
   };
-
+ 
   return (
     <div style={{ width: 430, background: th.bg, borderRadius: 16, border: `0.5px solid ${th.border}`, overflow: 'hidden', minHeight: 720, display: 'flex', flexDirection: 'column', color: th.text, fontFamily: 'inherit' }}>
       {screens[screen] || <div style={{ padding: 20, color: th.textMuted }}>Unknown screen.</div>}
